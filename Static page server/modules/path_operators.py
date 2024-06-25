@@ -25,3 +25,30 @@ def path_validator(selected_folder_path:str,folder_path:str) -> bool:
         error_log(error,path_validator)
         return False
     
+################################################
+
+### This function return the parent_folder_path for a given path
+def parent_path(path:str) -> str:
+    try:
+        path_list = path.split("/")
+        res = path_list[0]
+        for i in range(1,len(path_list-1)):
+            res = res + "/" + path_list[i]
+        return path+"/"
+    except Exception as error:
+        error_log(error,parent_path)
+        return path
+    
+###############################################
+
+### this function take path of file and separate it into folder_path and filename
+def path_separator(file_path:str) -> tuple[str,str]:
+    try:
+        path_list = file_path.split("/")
+        res = path_list[0]
+        for i in range(1,len(path_list-1)):
+            res = res + "/" + path_list[i]
+        return res+"/" , path_list[-1]
+    except Exception as error:
+        error_log(error,path_separator)
+        return file_path
