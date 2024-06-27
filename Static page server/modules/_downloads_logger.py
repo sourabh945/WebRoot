@@ -4,6 +4,7 @@ from datetime import datetime as dt
 #############################################
 
 from modules.error_logger import error_log # this function create the logs of errors in ./logs/error_logs.csv file
+from _paths import _download_log_file_path
 
 #############################################
 """
@@ -14,7 +15,7 @@ as the status for log is logged or not.
 """
 def downloads_logger(user:object,filename:str) -> bool:
     try:
-        with open("./logs/user_downloads_logs.csv","a") as file:
+        with open(_download_log_file_path,"a") as file:
             writer = wr(file)
             writer.writerow([user.username,user.ipaddress,user.session_id,filename,dt.now()])
         return True

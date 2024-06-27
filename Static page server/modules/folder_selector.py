@@ -23,5 +23,8 @@ def get_path():
         print("\n No path is selected\n")
         exit(1)
 
-###########################################
+##############################################
 
+### this variable store the sharing folder path that selected by user
+
+sharing_folder_path = get_path()
