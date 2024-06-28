@@ -21,7 +21,7 @@ parser = dict()
 
 _existing_keys = set() # it a set of existing keys it use to not have same for two users.
 
-def _key_generator(num:int=10):
+def _key_generator(num:int=16):
     res = "".join(choices(ascii_letters+digits,num))
     while res in _existing_keys:
         res = "".join(choices(ascii_letters+digits,num))
@@ -45,7 +45,7 @@ def new_key(existing_key:str,folder_path:str=None) -> str:
         return _new_key
     except Exception as error:
         error_log(error,new_key)
-        return ""
+        return _key_generator(16)
     
 ###################################################
 ### this function create the key for first time when user is logged in
@@ -53,13 +53,13 @@ def new_key(existing_key:str,folder_path:str=None) -> str:
 def key(user:object,folder_path:str):
     try:
         if users_module.user.validate(user) is True and path_validator(folder_path) is True:
-            _key = _key_generator(10)
+            _key = _key_generator(16)
             parser[_key] = [user,folder_path]
             return _key
-        return ""
+        return _key_generator(16)
     except Exception as error:
         error_log(error,key)
-        return ""
+        return _key_generator(16)
     
 ########################################################
 ### this function authenticate parser key
