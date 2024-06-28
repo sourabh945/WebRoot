@@ -60,3 +60,18 @@ def key(user:object,folder_path:str):
     except Exception as error:
         error_log(error,key)
         return ""
+    
+########################################################
+### this function authenticate parser key
+def authenticate_key(parser_key:str) -> bool:
+    return True if parser_key in _existing_keys else False
+    
+#########################################################
+### this function return user and the folder_path transfer thought the key in request using parser
+### when we use this function parser key used and it used only once
+
+def open_parser(parser_key:str) -> tuple[object,str]:
+    user,filepath = parser[parser_key]
+    del parser[parser_key]
+    _existing_keys.remove(parser_key)
+    return tuple(user,filepath)

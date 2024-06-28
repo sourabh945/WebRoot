@@ -39,7 +39,7 @@ def parent_path(path:str) -> str:
         return path+_separator
     except Exception as error:
         error_log(error,parent_path)
-        return path
+        return path 
     
 ###############################################
 
@@ -53,4 +53,4 @@ def path_separator(file_path:str) -> tuple[str,str]:
         return res+_separator , path_list[-1]
     except Exception as error:
         error_log(error,path_separator)
-        return file_path
+        return file_path , file_path
