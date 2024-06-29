@@ -5,4 +5,6 @@ _users_login_logs = "./logs/user_logs.csv"
 _download_log_file_path = "./logs/download_logs.csv"
 _log_folder_path = "./"
 
-_separator = "/"
+import os
+
+_separator = os.sep
