@@ -13,6 +13,10 @@ from modules.error_logger import error_log
 def get_path():
     try:
         path = filedialog.askdirectory()
+        if path == ():
+            messagebox.showinfo(title="ERROR",message="No path is selected. Server is stopped.",icon='error')
+            print("\n No path is selected\n")
+            exit(1)
         if messagebox.askquestion("Warning",f'Are you sure for expose the folder "{path}" to web?',icon='warning') == 'yes':
             return path
         messagebox.showinfo(title="ERROR",message="No path is selected. Server is stopped.",icon='error')
