@@ -34,9 +34,9 @@ def parent_path(path:str) -> str:
     try:
         path_list = path.split(_separator)
         res = path_list[0]
-        for i in range(1,len(path_list-1)):
+        for i in range(1,len(path_list)-1):
             res = res + _separator + path_list[i]
-        return path+_separator
+        return res
     except Exception as error:
         error_log(error,parent_path)
         return path 
@@ -48,7 +48,7 @@ def path_separator(file_path:str) -> tuple[str,str]:
     try:
         path_list = file_path.split(_separator)
         res = path_list[0]
-        for i in range(1,len(path_list-1)):
+        for i in range(1,len(path_list)-1):
             res = res + _separator + path_list[i]
         return res+_separator , path_list[-1]
     except Exception as error:

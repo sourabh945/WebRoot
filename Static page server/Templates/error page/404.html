@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error 404</title>
+    <link rel="icon" type="image/png" href="{{url_for('static',filename='images/icons/broken_page.png')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css for errorpage/main.css')}}">
+</head>
+<body>
+    <h1>404,Page is not found</h1>
+    <h3>This page is not exist. Please login again.</h3>
+    <a href="{{url_for('.login')}}">
+        <button class="button-class">
+            Login
+        </button>
+</body>
+</html>

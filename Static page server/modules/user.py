@@ -3,6 +3,7 @@ from datetime import datetime as dt
 from random import choices
 from string import ascii_letters,digits
 from csv import writer as wr
+from functools import wraps
 
 ### Import form modules folder ###
 
@@ -17,6 +18,7 @@ re_login_time = 1; # time in hours
 
 ### This a wrapper the verify that the object pass to any module of users_module has a object of class user_module.user
 def object_validator(func):
+    @wraps(func)
     def wrapper(obj):
         if type(obj).__name__ == 'user':
             return func(obj)
@@ -70,7 +72,7 @@ class users_module:
             self.ipaddress = ipaddress
             self.session_id = users_module.id_generator(num=32)
             self.time_of_login = dt.now()
-            if username in users_module.logged_user.keys():
+            if username in users_module.logged_users.keys():
                 old_user_object = users_module.logged_users[username]
                 old_user_object.logout()
             users_module.session_ids.add(self.session_id)
@@ -83,7 +85,7 @@ class users_module:
         ### This function is for create log of user login or logouts and store them into
         ### file ./logs/user_logs.csv, and type is login or logout
 
-        @object_validator
+        
         def user_logger(self,type:str) -> bool:
             try:
                 with open("./logs/user_logs.csv","a") as file:
@@ -102,7 +104,7 @@ class users_module:
         ### This function delete the all instance of the user and after the authentication of 
         ### give false and it also delete from logged_users dict and session_ids set.
 
-        @object_validator
+        
         def logout(self) -> bool:
             try:
                 self.user_logger('logout')

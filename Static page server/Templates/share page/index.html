@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css for sharepage/main.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css for sharepage/contaner.css')}}">
+    <link rel="icon" type="image/png" href="{{url_for('static',filename='images/icons/folder.png')}}">
+    <title>File</title>
+</head>
+<body>
+     <h2>Hello, {{username}}!</h2>
+    
+    <hr class="1">
+    <b>SESSION ID : {{session_id}}</b>
+    <hr class="2">
+    <h1>Index of "{{parent_folder}}"</h1>
+    <hr>
+    
+    <p id="UI_goUp">
+        <h4>Options: </h4>
+        <form class="inline"  method="post" action="{{url_for('post_index',parser_key=secret)}}">
+            <input type="hidden" name="item_type" value="up_dir">
+            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+            <button type="submit" name="item_name" value="up_dir" class="link-button">
+                <a class="file">
+                    <img src="{{url_for('static',filename='images/icons/folder_up.png')}}">
+                    Up_to_dir
+                </a>
+            </button>
+            <input type="hidden" name="item_type" value="refresh">
+            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+            <button type="submit" name="item_name" value="refresh" class="link-button">
+                <a class="file">
+                    <img src="{{url_for('static',filename='images/icons/loop.png')}}">
+                    Refresh 
+                </a>
+            </button>
+            <input type="hidden" name="item_type" value="upload">
+            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+            <button type="submit" name="item_name" value="upload" class="link-button">
+                <a class="file">
+                    <input  type="file" name="uploaded_file" >
+                    <img src="{{url_for('static',filename='images/icons/upload.png')}}">
+                    Upload
+                </a>
+            </button>
+        </form>
+    </p>
+    <hr>
+    <div class="content table">
+    <table order="">
+        <thead>
+            <tr>
+                <th>
+                    <a>Name</a>
+                </th>
+                <th>
+                    <a>Size</a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in (content) %}
+                <tr>
+                    <td sortable.data="1{{item[0]}}">
+                        <table class="ellipsis">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {% if item[1] == "dir"%}
+                                        <form class="inline" method="post" action="{{url_for('post_index',parser_key=secret)}}">
+                                            <input type="hidden" name="item_type" value="{{item[1]}}">
+                                            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                                            <button type="submit" name="item_name" value="{{item[0]}}" class="link-button">
+                                                <a class="file">
+                                                    <img src="{{url_for('static',filename='images/icons/'+item[3]+'.png')}}" alt="file">
+                                                    {{item[0]}}
+                                                </a>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                            {% if item[2] != '0 B' %}
+                                            <form class="inline" method="post" action="{{url_for('post_index',parser_key=secret)}}">
+                                                <input type="hidden" name="item_type" value="{{item[1]}}">
+                                                <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                                                <button type="" name="item_name" value="{{item[0]}}" class="link-button">
+                                                    <a class="file">
+                                                        <img src="{{url_for('static',filename='images/icons/'+item[3]+'.png')}}" alt="file">
+                                                        {{item[0]}}
+                                                    </a>
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <input type="hidden" name="item_type" value="{{item[1]}}">
+                                            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                                            <button type="" name="item_name" value="{{item[0]}}" class="link-button">
+                                                <a class="file">
+                                                    <img src="{{url_for('static',filename='images/icons/'+item[3]+'.png')}}" alt="file">
+                                                    {{item[0]}}
+                                                </a>
+                                            </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                    {% if item[1] == "file" %}
+                    <td sortable.data="{{item[2]}}">{{item[2]}}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}   
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>
