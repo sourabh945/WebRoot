@@ -19,33 +19,52 @@
     
     <p id="UI_goUp">
         <h4>Options: </h4>
-        <form class="inline"  method="post" action="{{url_for('post_index',parser_key=secret)}}">
-            <input type="hidden" name="item_type" value="up_dir">
-            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
-            <button type="submit" name="item_name" value="up_dir" class="link-button">
-                <a class="file">
-                    <img src="{{url_for('static',filename='images/icons/folder_up.png')}}">
-                    Up_to_dir
+        <div class="option-outer">
+            <div class="option-inner">
+                <form  method="post" action="{{url_for('.post_index',parser_key=secret)}}">
+                    <input type="hidden" name="item_type" value="up_dir">
+                    <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                    <button type="submit" name="item_name" value="up_dir" class="link-button">
+                        <a class="file">
+                            <img src="{{url_for('static',filename='images/icons/folder_up.png')}}">
+                            Up_to_dir
+                        </a>
+                    </button>
+                </form>   
+            </div>
+            <div class="option-inner"> 
+                <form method="post" action="{{url_for('.post_index',parser_key=secret)}}">
+                    <input type="hidden" name="item_type" value="refresh">
+                    <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                    <button type="submit" name="item_name" value="refresh" class="link-button">
+                        <a class="file">
+                            <img src="{{url_for('static',filename='images/icons/loop.png')}}">
+                            Refresh 
+                        </a>
+                    </button>
+                </form>
+            </div>    
+            <div class="option-inner">
+                <form method="post" action="{{url_for('.post_index',parser_key=secret)}}" enctype="multipart/form-data">
+                    <input type="hidden" name="item_type" value="upload">
+                    <input type="hidden" name="parent_folder" value="{{parent_folder}}">
+                    <button type="submit" name="item_name" value="upload" class="link-button">
+                        <a class="file">
+                            <input  type="file" name="uploaded_file" >
+                            <img src="{{url_for('static',filename='images/icons/upload.png')}}">
+                            Upload
+                        </a>
+                    </button>
+                </form>
+            </div>   
+        {% with message , category = get_flashed_messages(with_categories=true)%}
+            <div class="option-inner">
+                <a class="{{category}}">
+                    {{message}}
                 </a>
-            </button>
-            <input type="hidden" name="item_type" value="refresh">
-            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
-            <button type="submit" name="item_name" value="refresh" class="link-button">
-                <a class="file">
-                    <img src="{{url_for('static',filename='images/icons/loop.png')}}">
-                    Refresh 
-                </a>
-            </button>
-            <input type="hidden" name="item_type" value="upload">
-            <input type="hidden" name="parent_folder" value="{{parent_folder}}">
-            <button type="submit" name="item_name" value="upload" class="link-button">
-                <a class="file">
-                    <input  type="file" name="uploaded_file" >
-                    <img src="{{url_for('static',filename='images/icons/upload.png')}}">
-                    Upload
-                </a>
-            </button>
-        </form>
+            </div>
+        {% endwith %}    
+        </div>
     </p>
     <hr>
     <div class="content table">
@@ -69,7 +88,7 @@
                                 <tr>
                                     <td>
                                         {% if item[1] == "dir"%}
-                                        <form class="inline" method="post" action="{{url_for('post_index',parser_key=secret)}}">
+                                        <form class="inline" method="post" action="{{url_for('.post_index',parser_key=secret)}}">
                                             <input type="hidden" name="item_type" value="{{item[1]}}">
                                             <input type="hidden" name="parent_folder" value="{{parent_folder}}">
                                             <button type="submit" name="item_name" value="{{item[0]}}" class="link-button">

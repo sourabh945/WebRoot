@@ -1,6 +1,6 @@
 ######################## Flask configuration ###########################
 
-from flask import Flask , request , redirect , render_template , send_file , url_for ,abort
+from flask import Flask , request , redirect , render_template , send_file , url_for ,abort , flash
 
 ##########
 
@@ -9,6 +9,7 @@ app.config["SESSION_PERMANENT"] = False
 
 ######################################################################
 
+from werkzeug.utils import secure_filename
 
 #####################################################################
 
@@ -17,12 +18,13 @@ from modules.folder_selector import sharing_folder_path # this prompt for select
 ######################## modules imports ############################
 
 from modules._downloads_logger import downloads_logger
+from modules._uploads_logger import uploads_logger
 from modules.content_parser import content_of
 from modules.decorators import pre_authentication , pre_authentication_download
 from modules.error_logger import error_log
 from modules.login_operators import authenticate_user
 from modules.parser_keys import key
-from modules.path_operators import path_validator, path_separator,parent_path
+from modules.path_operators import path_validator, path_separator,parent_path , upload_path_validator
 from modules.user import users_module
 
 ######################  _paths imports  ######################################
@@ -96,11 +98,26 @@ def post_index(user:users_module.user,folder_path:str):
             if path_validator(parent_path(parent_folder)) is True:
                 return redirect(url_for('.post_index',parser_key=key(user,parent_path(parent_folder))))
             else:
-                return render_template("error page/403.html",secret=key(user,parent_folder),user=user), 403
+                return render_template("error page/403.html",secret=key(user,parent_folder),user=user.username), 403
         elif item_type == "refresh":
             return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
         elif item_type == "upload":
-            pass
+            uploaded_file = request.files['uploaded_file']
+            if uploaded_file.filename == "":
+                del uploaded_file
+                flash("upload is unsuccessful",'upload_status')
+                return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
+            else:
+                filename = secure_filename(uploaded_file.filename)
+                file_path = upload_path_validator(filename)
+                try:
+                    uploads_logger(user,file_path)
+                    uploaded_file.save(file_path)
+                    flash("Upload is successful",'upload_status')
+                except Exception as error:
+                    error_log(error,post_index)
+                    flash("Upload is unsuccessful",'upload_status')
+                return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
         else:
             abort(400)
     elif request.method == "GET":

@@ -1,7 +1,6 @@
 from csv import writer as wr
 import os
-import sys
-import traceback
+from datetime import datetime as dt
 
 ###################################################
 
@@ -43,7 +42,7 @@ def error_log(error:Exception,instance):
     # writing the error the logs in the file and open as append format
     with open(_error_log_file_path,'a') as file:
         writer = wr(file)                               # creating writer object for file
-        writer.writerow([error,error.__cause__,func_path(instance)])
+        writer.writerow([error,error.__cause__,func_path(instance),dt.now()])
 
 
     # printing the error on the terminal output of server
@@ -83,7 +82,7 @@ def other_error_logger(error:str,error_cause:str,instance):
     # writing the error the logs in the file and open as append format
     with open("./logs/error_logs.csv",'a') as file:
         writer = wr(file)                               # creating writer object for file
-        writer.writerow([error,error_cause,func_path(instance)])
+        writer.writerow([error,error_cause,func_path(instance),dt.now()])
 
 
     # printing the error on the terminal output of server

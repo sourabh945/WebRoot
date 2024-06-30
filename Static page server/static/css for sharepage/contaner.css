@@ -147,3 +147,12 @@
   .inline {
     padding-bottom: 1%;
   }
+
+  .option-outer {
+    width: auto;
+  }
+
+  .option-inner {
+    display: inline-block;
+    padding-right: 1%;
+  }
