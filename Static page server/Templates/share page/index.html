@@ -38,32 +38,25 @@
                     <input type="hidden" name="parent_folder" value="{{parent_folder}}">
                     <button type="submit" name="item_name" value="refresh" class="link-button">
                         <a class="file">
-                            <img src="{{url_for('static',filename='images/icons/loop.png')}}">
+                            <img src="{{url_for('static' , filename='images/icons/loop.png')}}">
                             Refresh 
                         </a>
                     </button>
                 </form>
-            </div>    
+            </div>
             <div class="option-inner">
-                <form method="post" action="{{url_for('.post_index',parser_key=secret)}}" enctype="multipart/form-data">
-                    <input type="hidden" name="item_type" value="upload">
-                    <input type="hidden" name="parent_folder" value="{{parent_folder}}">
-                    <button type="submit" name="item_name" value="upload" class="link-button">
-                        <a class="file">
-                            <input  type="file" name="uploaded_file" >
-                            <img src="{{url_for('static',filename='images/icons/upload.png')}}">
-                            Upload
-                        </a>
-                    </button>
+                <form method="post" enctype="multipart/form-data" action="{{url_for('.upload',parser_key=secret)}}">
+                    <label for="upload_file">
+                        <input type="file" name="uploaded_file" >
+                        <button type="submit">
+                            <a class="file">
+                                <img src="{{url_for('static',filename='images/icons/upload.png')}}">
+                                Upload
+                            </a>
+                        </button>
+                    </label> 
                 </form>
             </div>   
-        {% with message , category = get_flashed_messages(with_categories=true)%}
-            <div class="option-inner">
-                <a class="{{category}}">
-                    {{message}}
-                </a>
-            </div>
-        {% endwith %}    
         </div>
     </p>
     <hr>

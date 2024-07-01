@@ -75,7 +75,7 @@ def upload_path_validator(folder_path:str,filename:str) -> str:
                 while _filename in set(os.listdir(folder_path)):
                     i = i + 1 
                     _filename = f'{_name}({i}){_extension}'
-                return _filename
+                return os.path.join(folder_path,_filename)
         else:
             other_error_logger("Path Validation Error","Upload are happening to a invalid path where share is not allowed",upload_path_validator)
             abort(500)

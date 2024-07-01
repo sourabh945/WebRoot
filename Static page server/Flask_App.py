@@ -1,6 +1,6 @@
 ######################## Flask configuration ###########################
 
-from flask import Flask , request , redirect , render_template , send_file , url_for ,abort , flash
+from flask import Flask , request , redirect , render_template , send_file , url_for ,abort  #flash
 
 ##########
 
@@ -10,6 +10,8 @@ app.config["SESSION_PERMANENT"] = False
 ######################################################################
 
 from werkzeug.utils import secure_filename
+import threading
+from flask import copy_current_request_context
 
 #####################################################################
 
@@ -41,20 +43,28 @@ def home():
 
 @app.route("/login",methods=["POST","GET"])
 def login():
+
     if request.method == "POST":
+    
         try:
             username = request.form.get("username")
             password = request.form.get("pass")
             ip_address = request.remote_addr
+    
         except:
             return redirect("/login")
+    
         if authenticate_user(username,password) is True:
             user = users_module.user(username,ip_address)
             parser_key = key(user,sharing_folder_path)
             return redirect(url_for('.post_index',parser_key=parser_key))
+    
         else:
             return render_template("login form/index.html",login='False')
+    
     return render_template("login form/index.html",login='True')
+
+########################################################################################
 
 ### error pages
 
@@ -73,6 +83,8 @@ def internal_server_error(error):
 @app.errorhandler(400)
 def bad_request(error):
     return render_template("error page/400.html"), 400
+
+#######################################################################################################
 
 #### file Explorer page : heart of web app ###########################################
 
@@ -98,37 +110,21 @@ def post_index(user:users_module.user,folder_path:str):
             if path_validator(parent_path(parent_folder)) is True:
                 return redirect(url_for('.post_index',parser_key=key(user,parent_path(parent_folder))))
             else:
-                return render_template("error page/403.html",secret=key(user,parent_folder),user=user.username), 403
+                return render_template("error page/403.html",secret=key(user,parent_folder),user=user.username), 403    
         elif item_type == "refresh":
             return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
-        elif item_type == "upload":
-            uploaded_file = request.files['uploaded_file']
-            if uploaded_file.filename == "":
-                del uploaded_file
-                flash("upload is unsuccessful",'upload_status')
-                return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
-            else:
-                filename = secure_filename(uploaded_file.filename)
-                file_path = upload_path_validator(filename)
-                try:
-                    uploads_logger(user,file_path)
-                    uploaded_file.save(file_path)
-                    flash("Upload is successful",'upload_status')
-                except Exception as error:
-                    error_log(error,post_index)
-                    flash("Upload is unsuccessful",'upload_status')
-                return redirect(url_for('.post_index',parser_key=key(user,parent_folder)))
         else:
             abort(400)
     elif request.method == "GET":
         parser_key = key(user,folder_path)
-        return render_template("share page/index.html",content=content_of(folder_path),
-                           username=user.username,session_id=user.session_id,
-                           parent_folder=folder_path,secret=parser_key)
+        return render_template("share page/index.html",content=content_of(folder_path),username=user.username,session_id=user.session_id,parent_folder=folder_path,secret=parser_key)
 
+##########################################################################################################
+
+### this function hold for download by clients
 
 @app.get("/download")
-@pre_authentication_download
+@pre_authentication
 def download(user:users_module.user,file_path:str):
     try:
         folder_path,filename = path_separator(file_path)
@@ -140,6 +136,46 @@ def download(user:users_module.user,file_path:str):
         error_log(error,download)
         return abort(500)
     
+#########################################################################################################
+
+### this function is hold for the uploads of the function 
+
+@app.post("/upload")
+@pre_authentication
+def upload(user:users_module.user,folder_path:str):
+
+    @copy_current_request_context
+    def save_file(closeAfterWrite):
+
+        uploaded_file = request.files['uploaded_file']
+
+        if uploaded_file.filename == "":
+            del uploaded_file
+            closeAfterWrite()
+        
+        else:
+            filename = secure_filename(uploaded_file.filename)
+            file_path = upload_path_validator(folder_path,filename)
+            try:
+                uploads_logger(user,file_path)
+                if path_validator(file_path) is True:
+                    uploaded_file.save(file_path)  
+            except Exception as error:
+                error_log(error,upload)
+            closeAfterWrite()
+
+    def passExit():
+        pass
+
+    _file = request.files['uploaded_file']
+    normalExit = _file.stream.close
+    _file.stream.close = passExit
+
+    thread = threading.Thread(target=save_file,args=(normalExit,))
+    thread.start()
+
+    return redirect(url_for('.post_index',parser_key=key(user,folder_path)))
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0",port=5000,threaded=True)
-    pass
+    
