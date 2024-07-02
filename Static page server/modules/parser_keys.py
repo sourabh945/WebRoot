@@ -1,11 +1,18 @@
 from random import choices
 from string import ascii_letters,digits
+from multiprocessing import Manager
+from threading import Lock
+
+lock = Lock()
+
+manager = Manager()
 
 ######################################################
 
 from modules.error_logger import error_log # the error logging function log error to /log/error_logs.csv
 from modules.user import users_module
 from modules.path_operators import path_validator , parent_path
+from modules.shared_memory import get_parser,add_to_parser,remove_from_parser
 
 ######################################################
 ### This contain the user and its accessing folder information at any instant.
@@ -13,41 +20,25 @@ from modules.path_operators import path_validator , parent_path
 ### when we redirect from a webpage / function and to access this function we need 
 ### a key that have list of user and its accessing folder and the key is random number.
 
-parser = dict()
 
 #####################################################
 ### This function generate a random key every time it called and return 
 ### And this random string user as the key for the parser dict 
 
-_existing_keys = set() # it a set of existing keys it use to not have same for two users.
+ # it a set of existing keys it use to not have same for two users.
 
 def _key_generator(num:int=16):
     res = "".join(choices(ascii_letters+digits,k=num))
-    while res in _existing_keys:
+    while res in get_parser().keys():
         res = "".join(choices(ascii_letters+digits,k=num))
     return res
 
 ##################################################
 ### This function take the existing key and new folder and return a new for getting the user and folder
 ### that can parse to the function/ webpage to access the page
+def new_key():
+    pass 
 
-def new_key(existing_key:str,folder_path:str=None) -> str:
-    try:
-        if _existing_keys not in parser.keys():
-            return ""
-        user, old_folder_path = parser[existing_key]
-        _existing_keys.remove(existing_key)
-        del parser[existing_key]
-        _new_key = _key_generator(10)
-        if folder_path is None:
-            folder_path = old_folder_path
-        parser[_new_key] = (user,folder_path)
-        _existing_keys.add(_new_key)
-        return _new_key
-    except Exception as error:
-        error_log(error,new_key)
-        return _key_generator(16)
-    
 ###################################################
 ### this function create the key for first time when user is logged in
 
@@ -55,8 +46,7 @@ def key(user:object,folder_path:str):
     try:
         if users_module.user.validate(user) is True and path_validator(folder_path) is True:
             _key = _key_generator(16)
-            parser[_key] = (user,folder_path)
-            _existing_keys.add(_key)
+            add_to_parser(user,folder_path,_key)
             return _key
         return _key_generator(16)
     except Exception as error:
@@ -66,7 +56,7 @@ def key(user:object,folder_path:str):
 ########################################################
 ### this function authenticate parser key
 def authenticate_key(parser_key:str) -> bool:
-    if parser_key in _existing_keys:
+    if parser_key in get_parser().keys():
         return True
     return False
     
@@ -75,9 +65,8 @@ def authenticate_key(parser_key:str) -> bool:
 ### when we use this function parser key used and it used only once
 
 def open_parser(parser_key:str) -> tuple[users_module.user,str]:
-    user,filepath = parser[parser_key]
-    del parser[parser_key]
-    _existing_keys.remove(parser_key)
+    user,filepath = get_parser()[parser_key]
+    remove_from_parser(parser_key)
     return (user,filepath)
 
 #######################################################
@@ -85,7 +74,7 @@ def open_parser(parser_key:str) -> tuple[users_module.user,str]:
 ### that can be reused to access page but this time the page, but this time 
 ### file path change to its folder path that contain the file 
 
-def open_parser_return_again(parser_key:str) -> tuple[users_module.user,str]:
-    user , filepath = parser[parser_key]
-    parser[parser_key] = (user,parent_path(filepath))
-    return (user,filepath)
+# def open_parser_return_again(parser_key:str) -> tuple[users_module.user,str]:
+#     user , filepath = parser[parser_key]
+#     parser[parser_key] = (user,parent_path(filepath))
+#     return (user,filepath)

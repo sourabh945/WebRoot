@@ -8,6 +8,7 @@ from functools import wraps
 ### Import form modules folder ###
 
 from modules.error_logger import error_log , other_error_logger## function for log the error logs in ./logs/error_logs.csv file
+from modules.shared_memory import get_logged_user,get_session_ids,add_to_session_ids,add_to_logged_user,remove_from_logged_user,remove_from_session_ids
 
 ######################################
 
@@ -32,10 +33,7 @@ def object_validator(func):
 ### class users_modules contain all the necessary modules we use with user class to define user
 
 class users_module:
-
-    session_ids = set() ### this set contain all session ids that active in application
-    
-    logged_users = {} ### this dict contain all users object that logged in application 
+ ### this dict contain all users object that logged in application 
 
     ### logged_user = {username:str,user_module.user:object}
 
@@ -47,7 +45,7 @@ class users_module:
 
     def id_generator(num:int=32) -> str:
         res = "".join(choices(ascii_letters+digits,k=num))
-        while res in users_module.session_ids:
+        while res in get_session_ids():
             res = "".join(choices(ascii_letters+digits,k=num))
         return res
     
@@ -72,11 +70,11 @@ class users_module:
             self.ipaddress = ipaddress
             self.session_id = users_module.id_generator(num=32)
             self.time_of_login = dt.now()
-            if username in users_module.logged_users.keys():
-                old_user_object = users_module.logged_users[username]
-                old_user_object.logout()
-            users_module.session_ids.add(self.session_id)
-            users_module.logged_users[username] = self
+            if username in get_logged_user().keys():
+                old_user_object = get_logged_user()[username]
+                users_module.user.logout(old_user_object)
+            add_to_session_ids(self.session_id)
+            add_to_logged_user(username,self)
             if users_module.user.user_logger(self,"login") is True:
                 del self
 
@@ -108,8 +106,8 @@ class users_module:
         def logout(self) -> bool:
             try:
                 self.user_logger('logout')
-                users_module.session_ids.remove(self.session_id)
-                del users_module.logged_users[self.username]
+                remove_from_session_ids(self.session_id)
+                remove_from_logged_user(self.username)
                 del self
                 return True
             except Exception as error:
@@ -129,7 +127,7 @@ class users_module:
                     self.logout()
                     return False
                 else:
-                    if self.session_id in users_module.session_ids and users_module.logged_users[self.username] == self:
+                    if self.session_id in get_session_ids() and get_logged_user()[self.username] == self:
                         return True
                     else:
                         return False
