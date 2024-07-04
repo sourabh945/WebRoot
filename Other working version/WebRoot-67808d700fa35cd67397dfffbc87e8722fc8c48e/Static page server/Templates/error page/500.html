@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{url_for('static',filename='images/icons/broken_page.png')}}">
+    <title>Error 500</title>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css for errorpage/main.css')}}">
+</head>
+<body>
+    <h1>500, Internal server error</h1>
+    <h3>Server unable to process. Please login again</h3>
+    <a href="{{url_for('.login')}}">
+        <button class="button-class">
+            Login
+        </button>
+</body>
+</html>
