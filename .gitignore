@@ -1,5 +1,5 @@
 *.pem
 *.key
 *.csv
-*.pyc
+*.cpython-310.pyc
 *.json
