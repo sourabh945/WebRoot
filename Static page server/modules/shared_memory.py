@@ -1,43 +1,32 @@
-from multiprocessing import Manager , Process , Queue , Lock 
-import multiprocessing
+from modules.shared_memory_client import shared_memory_operator
 
-manager = Manager()
-
-lock = Lock()
-
-shared_dict = manager.dict({'parser':{},'logged_user':{},'session_ids':set()})
+from modules.user import users_module
 
 def get_object(holder:str):
-    def func(shared_dict,result,holder):
-        result.put(shared_dict[holder])
-    result = Queue()
-    
-    process = Process(target=func,args=(shared_dict,result,holder))
-    process.start()
-    process.join()
-    return result.get()
+    data = shared_memory_operator(holder,'get')
+    if holder == 'logged_user':
+        result = {}
+        for i in data.keys():
+            result[i] = users_module.user(**data[i])
+        return result
+    elif holder == 'parser':
+        result = {}
+        for i in 
+    return shared_memory_operator(holder,'get')
 
 def add_to_object(holder:str,adder:any,_key:str=""):
-    def func(shared_dict,holder,adder,_key):
-        if holder == "session_ids":
-            shared_dict[holder].add(adder)
-        else:
-            shared_dict[holder][_key] = adder
-    with lock:
-        process = Process(target=func,args=(shared_dict,holder,adder,_key))
-        process.start()
-    process.join()
+    global data
+    if holder == "session_ids":
+        data['manager_dict'][holder].add(adder)
+    else:
+        data['manager_dict'][holder][_key] = adder
     
 def remove_from_object(holder:str,remover:any=None,_key:str=""):
-    def func(shared_dict,holder,remover,_key):
-        if holder == "session_ids":
-            shared_dict[holder].remove(remover)
-        else:
-            del shared_dict[holder][_key]
-    with lock:
-        process = Process(target=func,args=(shared_dict,holder,remover,_key))
-        process.start()
-        process.join()
+    global data
+    if holder == "session_ids":
+        data['manager_dict'][holder].remove(remover)
+    else:
+        del data['manager_dict'][holder][_key]
     
 
 #################################################

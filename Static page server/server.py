@@ -4,6 +4,8 @@ from flask import Flask , request , redirect , render_template , send_file , url
 
 ##########
 
+global data
+
 app = Flask(__name__,template_folder="Templates")
 app.config["SESSION_PERMANENT"] = False
 
@@ -18,6 +20,8 @@ from flask import copy_current_request_context
 from modules.folder_selector import sharing_folder_path # this prompt for select path of sharing folder 
 
 ######################## modules imports ############################
+
+from modules.shared_memory import *
 
 from modules._downloads_logger import downloads_logger
 from modules._uploads_logger import uploads_logger
@@ -35,10 +39,10 @@ from _paths import _separator
 
 ###################### Web pages of app ##############################
 
-# @app.before_request
-# def before_request():
-#     if request.url.startswith('http://'):
-#         return redirect(request.url.replace('http://','https://',1) , code=301)
+@app.before_request  ### this function change http into https
+def before_request():
+    if request.url.startswith('http://'):
+        return redirect(request.url.replace('http://','https://',1) , code=301)
 
 @app.route("/")  ### Home page is redirect to the login page
 def home():
@@ -181,6 +185,87 @@ def upload(user:users_module.user,folder_path:str):
 
     return redirect(url_for('.post_index',parser_key=key(user,folder_path)))
 
+##########################################################################################################
+
+### This section is allow to share variable between the workers of gunicorn
+
+from multiprocessing import Manager 
+import threading 
+from signal import SIGHUP
+import os
+import time
+
+def _worker_thread():
+    global data
+    while True:
+        time.sleep(5)
+        os.kill(data['master_pid'],SIGHUP)
+        break
+
+def _initializer():
+    global data 
+    data = {}
+    data['master_pid'] = os.getpid()
+    shared_dict = Manager().dict({'parser':{},'logged_user':{},'session_ids':set()})
+    data['manager_dict'] = shared_dict
+    t = threading.Thread(target=_worker_thread)
+    t.daemon = True
+    t.start()
+    data['background_thread'] = t
+
+
+##########################################################################################################
+
+### This part is make the gunicorn as the http server for the application
+
+from gunicorn.app.base import BaseApplication
+
+class HttpSErver(BaseApplication):
+
+    def __init__(self, app:Flask ,option=None, usage=None, prog=None):
+        self.application = app
+        self.option = option or {}
+        super().__init__(usage, prog)
+
+
+    def load_config(self):
+        for key , value in self.option.items():
+            if key in self.cfg.settings and value is not None:
+                self.cfg.set(key.lower(),value)
+
+    def load(self):
+        return self.application
+    
+###########################################################################################################
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5000,threaded=True)
+
+    _initializer()
+
+    import multiprocessing
+    import gevent
+
+    nums_workers = multiprocessing.cpu_count()*2 + 1
+
+    option = {
+        'bind':'0.0.0.0:5000',
+        'worker': nums_workers,
+        'worker_class' : 'gevent',
+        'worker_connection' : 1000,
+
+        'timeout':30,
+        'graceful_timeout':30,
+        'keepalive':2,
+
+        'errorlog':"-",
+        'accesslog':"-",
+        'loglevel':'info',
+
+        'preload_app':True,
+
+        'keyfile':'./certificates/key.pem',
+        'certfile':'./certificates/cert.pem'
+    }
+
+    HttpSErver(app,option).run()
     
