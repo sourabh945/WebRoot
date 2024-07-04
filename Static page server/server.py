@@ -4,6 +4,8 @@ from flask import Flask , request , redirect , render_template , send_file , url
 
 ##########
 
+global data
+
 app = Flask(__name__,template_folder="Templates")
 app.config["SESSION_PERMANENT"] = False
 
@@ -35,10 +37,10 @@ from _paths import _separator
 
 ###################### Web pages of app ##############################
 
-# @app.before_request
-# def before_request():
-#     if request.url.startswith('http://'):
-#         return redirect(request.url.replace('http://','https://',1) , code=301)
+@app.before_request  ### this function change http into https
+def before_request():
+    if request.url.startswith('http://'):
+        return redirect(request.url.replace('http://','https://',1) , code=301)
 
 @app.route("/")  ### Home page is redirect to the login page
 def home():
@@ -135,8 +137,7 @@ def download(user:users_module.user,file_path:str):
         folder_path,filename = path_separator(file_path)
         downloads_logger(user,file_path)
         return send_file(file_path,as_attachment=True,download_name=filename,)
-        
-        # return redirect(url_for(".post_index",parser_key=key(user,folder_path)))
+    
     except Exception as error:
         error_log(error,download)
         return abort(500)
@@ -181,6 +182,59 @@ def upload(user:users_module.user,folder_path:str):
 
     return redirect(url_for('.post_index',parser_key=key(user,folder_path)))
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5000,threaded=True)
+##########################################################################################################
+
+
+##########################################################################################################
+
+### This part is make the gunicorn as the http server for the application
+
+from gunicorn.app.base import BaseApplication
+
+class HttpSErver(BaseApplication):
+
+    def __init__(self, app:Flask ,option=None, usage=None, prog=None):
+        self.application = app
+        self.option = option or {}
+        super().__init__(usage, prog)
+
+
+    def load_config(self):
+        for key , value in self.option.items():
+            if key in self.cfg.settings and value is not None:
+                self.cfg.set(key.lower(),value)
+
+    def load(self):
+        return self.application
+    
+###########################################################################################################
+
+if __name__ == "__main__":    
+
+    import multiprocessing
+    import gevent
+
+    nums_workers = multiprocessing.cpu_count()*2 + 1
+
+    option = {
+        'bind':'0.0.0.0:5000',
+        'workers': nums_workers,
+        'worker_class' : 'gevent',
+        'worker_connection' : 1000,
+
+        'timeout':30,
+        'graceful_timeout':30,
+        'keepalive':2,
+
+        'errorlog':"-",
+        'accesslog':"-",
+        'loglevel':'info',
+
+        'preload_app':True,
+
+        'keyfile':'./certificates/key.pem',
+        'certfile':'./certificates/cert.pem'
+    }
+
+    HttpSErver(app,option).run()
     

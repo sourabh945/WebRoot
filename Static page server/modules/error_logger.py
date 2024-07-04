@@ -47,8 +47,8 @@ def error_log(error:Exception,instance):
 
     # printing the error on the terminal output of server
     print('\n >>>>>>>>>>>>>>    ERROR   >>>>>>>>>>>>>>>\n')
-    print(f'Error: {error}\n Cause: {error.__cause__}\n Function_path: {func_path(instance)}')
-    print('\n >>>>>>>>>>>>>>    ERROR   >>>>>>>>>>>>>>>\n')
+    print(f'Error: {error}\n Cause: {error.__cause__}\n Traceback: {error.__traceback__.tb_frame.f_back}\n Function_path: {func_path(instance)}')
+    print('\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
 
 #####################################################
 
