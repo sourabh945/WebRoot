@@ -21,8 +21,6 @@ from modules.folder_selector import sharing_folder_path # this prompt for select
 
 ######################## modules imports ############################
 
-from modules.shared_memory import *
-
 from modules._downloads_logger import downloads_logger
 from modules._uploads_logger import uploads_logger
 from modules.content_parser import content_of
@@ -139,8 +137,7 @@ def download(user:users_module.user,file_path:str):
         folder_path,filename = path_separator(file_path)
         downloads_logger(user,file_path)
         return send_file(file_path,as_attachment=True,download_name=filename,)
-        
-        # return redirect(url_for(".post_index",parser_key=key(user,folder_path)))
+    
     except Exception as error:
         error_log(error,download)
         return abort(500)
@@ -187,32 +184,6 @@ def upload(user:users_module.user,folder_path:str):
 
 ##########################################################################################################
 
-### This section is allow to share variable between the workers of gunicorn
-
-from multiprocessing import Manager 
-import threading 
-from signal import SIGHUP
-import os
-import time
-
-def _worker_thread():
-    global data
-    while True:
-        time.sleep(5)
-        os.kill(data['master_pid'],SIGHUP)
-        break
-
-def _initializer():
-    global data 
-    data = {}
-    data['master_pid'] = os.getpid()
-    shared_dict = Manager().dict({'parser':{},'logged_user':{},'session_ids':set()})
-    data['manager_dict'] = shared_dict
-    t = threading.Thread(target=_worker_thread)
-    t.daemon = True
-    t.start()
-    data['background_thread'] = t
-
 
 ##########################################################################################################
 
@@ -240,7 +211,6 @@ class HttpSErver(BaseApplication):
 
 if __name__ == "__main__":
 
-    _initializer()
 
     import multiprocessing
     import gevent
@@ -249,7 +219,7 @@ if __name__ == "__main__":
 
     option = {
         'bind':'0.0.0.0:5000',
-        'worker': nums_workers,
+        'workers': nums_workers,
         'worker_class' : 'gevent',
         'worker_connection' : 1000,
 
@@ -259,7 +229,7 @@ if __name__ == "__main__":
 
         'errorlog':"-",
         'accesslog':"-",
-        'loglevel':'info',
+        'loglevel':'error',
 
         'preload_app':True,
 

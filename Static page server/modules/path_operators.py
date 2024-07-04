@@ -26,7 +26,7 @@ def path_validator(folder_path:str) -> bool:
             return True
     except Exception as error:
         error_log(error,path_validator)
-        return False
+        return abort(500)
     
 ################################################
 

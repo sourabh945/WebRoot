@@ -8,7 +8,9 @@ from functools import wraps
 ### Import form modules folder ###
 
 from modules.error_logger import error_log , other_error_logger## function for log the error logs in ./logs/error_logs.csv file
-from modules.shared_memory import get_logged_user,get_session_ids,add_to_session_ids,add_to_logged_user,remove_from_logged_user,remove_from_session_ids
+from modules.shared_memory_client import gar_operator
+
+from _paths import _users_login_logs
 
 ######################################
 
@@ -28,27 +30,25 @@ def object_validator(func):
         return False
     return wrapper
 
+########################################################
+
+###this function generate a unique session id to every logged user and this is complete random
+
+def id_generator(num:int=32) -> str:
+    res = "".join(choices(ascii_letters+digits,k=num))
+    session_ids = gar_operator('session_ids','get')
+    while res in session_ids:
+        res = "".join(choices(ascii_letters+digits,k=num))
+    return res
+
+
 ###########################################################
+
 
 ### class users_modules contain all the necessary modules we use with user class to define user
 
 class users_module:
- ### this dict contain all users object that logged in application 
 
-    ### logged_user = {username:str,user_module.user:object}
-
-    ### and all users and its session id should to be in these sets because it use to authenticate user
-
-    ########################################################
-
-    ###this function generate a unique session id to every logged user and this is complete random
-
-    def id_generator(num:int=32) -> str:
-        res = "".join(choices(ascii_letters+digits,k=num))
-        while res in get_session_ids():
-            res = "".join(choices(ascii_letters+digits,k=num))
-        return res
-    
     ###########################################################
 
     ### the class user is class to declare user it will generate user_login_logs, logout the user and validate user
@@ -65,18 +65,22 @@ class users_module:
         ### This function create the user and this will also works as the login function 
         ### This add the user into the logged_users dict and session_id to session_ids set
 
-        def __init__(self,username:str,ipaddress:str) -> None:
+        def __init__(self,username:str,ipaddress:str,session_id:str=id_generator(num=32),time_of_login:str=dt.now().isoformat(),ft:bool=True) -> None:
             self.username = username
             self.ipaddress = ipaddress
-            self.session_id = users_module.id_generator(num=32)
-            self.time_of_login = dt.now()
-            if username in get_logged_user().keys():
-                old_user_object = get_logged_user()[username]
-                users_module.user.logout(old_user_object)
-            add_to_session_ids(self.session_id)
-            add_to_logged_user(username,self)
-            if users_module.user.user_logger(self,"login") is True:
-                del self
+            self.session_id = session_id
+            self.time_of_login = time_of_login
+            self.ft = False
+          
+            if ft is True:
+                if users_module.user.user_logger(self) is True:
+
+                    gar_operator('session_ids','add',self.session_id)
+
+                    gar_operator('logged_user','add',self,username)
+
+                else:
+                    del self
 
         ###########################################################
 
@@ -84,35 +88,17 @@ class users_module:
         ### file ./logs/user_logs.csv, and type is login or logout
 
         
-        def user_logger(self,type:str) -> bool:
+        def user_logger(self) -> bool:
             try:
-                with open("./logs/user_logs.csv","a") as file:
+                with open(_users_login_logs,"a") as file:
                     log_writer = wr(file)
-                    if type=="login":
-                        log_writer.writerow([self.username,self.ipaddress,self.session_id,self.time_of_login,"login"])
-                    elif type=="logout":
-                        log_writer.writerow([self.username,self.ipaddress,self.session_id,self.time_of_login,"logout",dt.now()])
+                    log_writer.writerow([self.username,self.ipaddress,self.session_id,self.time_of_login])
                 return True
             except Exception as error: 
                 error_log(error,users_module.user.user_logger)
                 return False
             
         ##########################################################
-
-        ### This function delete the all instance of the user and after the authentication of 
-        ### give false and it also delete from logged_users dict and session_ids set.
-
-        
-        def logout(self) -> bool:
-            try:
-                self.user_logger('logout')
-                remove_from_session_ids(self.session_id)
-                remove_from_logged_user(self.username)
-                del self
-                return True
-            except Exception as error:
-                error_log(error,users_module.user.logout)
-                return False
             
         ##########################################################
             
@@ -123,11 +109,11 @@ class users_module:
         @object_validator
         def validate(self) -> bool:
             try:
-                if (dt.now() - self.time_of_login).seconds > re_login_time*60*60:
+                if (dt.now() - dt.fromisoformat(self.time_of_login)).seconds > re_login_time*60*60:
                     self.logout()
                     return False
                 else:
-                    if self.session_id in get_session_ids() and get_logged_user()[self.username] == self:
+                    if gar_operator('logged_user','authentication',self,self.username):
                         return True
                     else:
                         return False
