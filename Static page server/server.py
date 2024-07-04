@@ -209,8 +209,7 @@ class HttpSErver(BaseApplication):
     
 ###########################################################################################################
 
-if __name__ == "__main__":
-
+if __name__ == "__main__":    
 
     import multiprocessing
     import gevent
@@ -229,7 +228,7 @@ if __name__ == "__main__":
 
         'errorlog':"-",
         'accesslog':"-",
-        'loglevel':'error',
+        'loglevel':'info',
 
         'preload_app':True,
 

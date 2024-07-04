@@ -22,7 +22,6 @@ async def server_requester(holder:str,operation:str,object=[],key:str=None):
                 _obj , path = object
                 object = (_obj.__dict__,path)
 
-            print({'holder':holder,'operation':operation,'object':object,'key':key})
 
             await server.send(json.dumps({'holder':holder,'operation':operation,'object':object,'key':key}))
 
@@ -30,8 +29,6 @@ async def server_requester(holder:str,operation:str,object=[],key:str=None):
             
 
             response = json.loads(_response)
-
-            print(response)
 
             try:
                 return response['response']
