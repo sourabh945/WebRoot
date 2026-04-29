@@ -278,7 +278,7 @@ def show_summary(detected_imports, succeeded, failed, config_path):
 
 def main():
     """Main installation flow"""
-    console.print(Panel.fit("[bold green]WebRoot Installation[/bold green]", expand=False))
+    console.print(Panel("[bold green]WebRoot Installation[/bold green]", expand=False))
 
     # Scan for dependencies
     console.print("[bold]Scanning Python files for dependencies...[/bold]")
