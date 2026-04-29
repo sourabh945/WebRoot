@@ -1,5 +1,12 @@
-import tkinter as tk
-from tkinter import filedialog , messagebox
+import sys
+
+global __path
+
+try: 
+    __path = sys.argv[1]
+except: 
+    import tkinter as tk
+    from tkinter import filedialog , messagebox
 
 ####################################
 
@@ -31,4 +38,4 @@ def get_path():
 
 ### this variable store the sharing folder path that selected by user
 
-sharing_folder_path = get_path()
+sharing_folder_path = __path or get_path()
